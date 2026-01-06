@@ -21,6 +21,7 @@ class Server{
         int port;
         SOCKET server_socket;
         std::atomic<bool> running;
+        void setupSignalHandler();
 };
 
 

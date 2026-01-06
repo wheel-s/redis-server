@@ -1,4 +1,5 @@
 #include "../include/commandHandler.h"
+#include "../include/database.h"
 #include <vector>
 #include <exception>
 #include <sstream>
@@ -23,9 +24,6 @@ std::vector<std::string>parseRespCommand(const std::string &input){
 
         while(iss >>token){
             tokens.push_back(token);
-        }
-        for(auto& t : tokens){
-            std::cout<<t <<"\n";        
         }
         return tokens;
     }
@@ -58,7 +56,7 @@ std::vector<std::string>parseRespCommand(const std::string &input){
         pos += len + 2;
 
     }
-
+    
     return tokens;
 }
 
@@ -71,14 +69,22 @@ std::string CommandHandler ::processCommand(const std::string& commandLine){
     auto tokens = parseRespCommand(commandLine);
     if(tokens.empty()){ return ".Error: Empty Command\r\n";}
 
-
-    for(auto& t : tokens){
-        std::cout<<t <<"\n";     
-    }
+    // std::cout<< commandLine<<"\n";
+    // for(auto& t : tokens){ std::cout<<t <<"\n"; }
 
     std::string cmd = tokens[0];
     std::transform(cmd.begin(), cmd.end(), cmd.begin(), ::toupper);
     std::ostringstream response;
+    Database& db = Database::getInstance();
+
+    if(cmd == "PING"){
+        response << "+PONG\r\n";
+    }else if(cmd == "ECHO"){
+        // ........
+    }
+    else{
+        response <<"+Error Unknown command\r\n";
+    }
 
     
     return  response.str();

@@ -1,20 +1,41 @@
 #include "../include/server.h"
 #include "../include/commandHandler.h"
+#include "../include/database.h"
+
 #include <iostream>
 #include <unistd.h>
 #include <vector>
 #include <thread>
 #include <exception>
 #include <cstring>
-
+#include <signal.h>
 
 
 
 static Server* globalServer = nullptr; 
 
+
+void signalHandler(int signum){
+    if(globalServer){
+        std::cout<< "caught signum"<< signum<<" shutting down.....\n";
+        globalServer->shutdown();
+    }
+    exit(signum);
+}
+
+
+void Server::setupSignalHandler(){
+    signal(SIGINT, signalHandler);
+
+}
+
+
+
+
 Server::Server(int port) : port(port),server_socket(INVALID_SOCKET), running(true){
 
     globalServer = this;
+    setupSignalHandler();
 }
 
 void Server::shutdown(){
@@ -80,7 +101,7 @@ void Server::run(){
             while(true){
                 memset(buffer, 0, sizeof(buffer));
                 int bytes= recv(client_socket, buffer, sizeof(buffer)-1, 0);
-                if(bytes<=0){break;}
+                if(bytes <= 0){break;}
 
                 std::string request(buffer, bytes);
                 std::string response = cmdHandler.processCommand(request);
@@ -89,13 +110,20 @@ void Server::run(){
             }  
             closesocket(client_socket);
         
-        });
+        });  
+    }
 
         for(auto& t : threads){
             if(t.joinable()) {t.join();}
             
         }
-    }
+  
+        if(Database::getInstance().dump("dump.my_rdb")){
+            std::cout<<"Database Dumped to dump.my_rdb\n";
+        }else{
+            std::cerr<<"Error dumping databse\n";
+        }
+
    
 }
 
