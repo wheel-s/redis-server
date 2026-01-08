@@ -24,6 +24,13 @@ int main(int argc, char* argv[]){
    
     // std::cout<<"hello "<< port<<"\n";
 
+    if(Database::getInstance().load("dump.my_rdb")){
+        std::cout<< "Database loaded from dump.my_rdb\n";
+    }
+    else{
+        std::cout<< "No dump found or load failed, starting with an emptydatabase\n";
+    }
+    
     Server server(port);
     
     std::thread persistenceThread([](){

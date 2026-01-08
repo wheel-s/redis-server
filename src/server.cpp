@@ -41,6 +41,13 @@ Server::Server(int port) : port(port),server_socket(INVALID_SOCKET), running(tru
 void Server::shutdown(){
     running = false;
     if(server_socket != INVALID_SOCKET){
+    
+      if(Database::getInstance().dump("dump.my_rdb")){
+            std::cout<<"Database Dumped to dump.my_rdb\n";
+      }else{
+            std::cerr<<"Error dumping databse\n";
+        }
+
       close(server_socket);
       WSACleanup();
     }
