@@ -60,9 +60,110 @@ std::vector<std::string>parseRespCommand(const std::string &input){
     return tokens;
 }
 
-CommandHandler::CommandHandler() {
-    
+
+static std::string  handleLlen(const std::vector<std::string> tokens, Database &db){
+     if(tokens.size() < 2){
+           return " +Error: LLEN requires Key\r\n";
+     }
+    size_t len = db.llen(tokens[1]);
+    return ":" + std::to_string(len) + "\r\n";
 }
+
+static std::string  handleLpush(const std::vector<std::string> tokens, Database &db){
+    if(tokens.size() < 3){
+        return " +Error: LPUSH requires Key and value\r\n";
+     }
+     db.lpush(tokens[1], tokens[2]);
+     size_t len = db.llen(tokens[1]);
+     return ":" + std::to_string(len) + "\r\n";
+}
+
+static std::string  handleRpush(const std::vector<std::string> tokens, Database &db){
+    if(tokens.size() < 3){
+        return " +Error: RPUSH requires Key and value\r\n";
+    }
+     db.rpush(tokens[1], tokens[2]);
+     size_t len = db.llen(tokens[1]);
+     return ":" + std::to_string(len) + "\r\n";
+  
+}
+
+
+static std::string  handleRpop(const std::vector<std::string> tokens, Database &db){
+    if(tokens.size() < 2){
+        return " +Error: RPOP requires Key \r\n";
+    }
+    std::string val;
+    if(db.rpop(tokens[1], val)){
+        return "$" + std::to_string(val.size()) + "\r\n" + val +"\r\n";
+    }
+    return "$-1\r\n";
+}
+
+
+static std::string  handleLpop(const std::vector<std::string> tokens, Database &db){
+    if(tokens.size() < 2){
+        return " +Error: LPOP requires Key and value\r\n";
+    }
+    std::string val;
+    if(db.lpop(tokens[1], val)){
+        return "$" + std::to_string(val.size()) + "\r\n" + val +"\r\n";
+    }
+    return "$-1\r\n";
+}
+
+static std::string  handleLrem(const std::vector<std::string> tokens, Database &db){
+    if(tokens.size() < 4){
+        return " +Error: LREM requires Key , count and value\r\n";
+    }
+    try{
+        int count = std::stoi(tokens[2]);
+        int removed = db.lrem(tokens[1], count, tokens[3]);
+        return ":" + std::to_string(removed) + "\r\n";
+    }catch(const std::exception&){
+        return "+Error: Invalid count\r\n";
+    }
+
+}
+
+
+static std::string  handleLindex(const std::vector<std::string> tokens, Database &db){
+    if(tokens.size() < 3){
+        return " +Error: LINDEX requires Key, index and value \r\n";
+    }
+     try{
+        int index = std::stoi(tokens[2]);
+        std::string value;
+        if(db.lindex(tokens[1], index, value)){
+            return "$" + std::to_string(value.size()) +"\r\n" + value +"\r\n";
+        }else{
+            return "$-1\r\n";
+        }
+    }catch(const std::exception&){
+        return "+Error: Invalid count\r\n";
+    }
+}
+
+
+static std::string  handleLset(const std::vector<std::string> tokens, Database &db){
+    if(tokens.size() < 4){
+        return " +Error: LST requires Key, index and value\r\n";
+    }
+    try{
+        int index = std::stoi(tokens[2]);
+        if(db.lset(tokens[1], index, tokens[3])){
+            return "+OK\r\n";
+        }else{
+            return "+Error: Index out of range";
+        }
+    }catch(const std::exception&){
+            return "+Error: Invalid Index";
+    }
+    return ;
+}
+
+
+CommandHandler::CommandHandler() {}
 
 std::string CommandHandler ::processCommand(const std::string& commandLine){
     
@@ -139,12 +240,34 @@ std::string CommandHandler ::processCommand(const std::string& commandLine){
             if(db.rename(tokens[1], tokens[2])){
             response << "+OK\r\n";}
         }
+    }else if(cmd == "LLEN"){
+        return handleLlen(tokens, db);
+    } 
+    else if(cmd == "LPUSH"){
+        return handleLpush(tokens, db);
+   }
+   else if(cmd == "RPUSH"){
+        return handleRpush(tokens, db);
+    }
+    else if(cmd == "LPOP"){
+        return handleLpop(tokens, db);
+    }
+    else if(cmd == "RPOP"){
+        return handleRpop(tokens, db);
+    }
+    else if(cmd == "LREM"){
+        return handleLrem(tokens, db);
+    }
+    else if(cmd == "LINDEX"){
+        return handleLindex(tokens, db);
+    }
+    else if(cmd == "LSET"){
+        return handleLset(tokens, db);
     }
    
     else{
         response <<"+Error Unknown command\r\n";
     }
-
     
     return  response.str();
     

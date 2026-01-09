@@ -98,8 +98,6 @@ void Server::run(){
             closesocket(server_socket);
             WSACleanup();
             break;
-
-
         }
 
         threads.emplace_back([client_socket, &cmdHandler](){

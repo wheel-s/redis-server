@@ -26,6 +26,18 @@ class Database {
         //remane
         bool rename(const std::string& oldkey, const std::string& newkey);
 
+        size_t llen(const std::string&key);
+        void lpush(const std::string &key, const std::string& value);
+        void rpush(const std::string &key, const std::string& value);
+        bool lpop(const std::string &key, std::string& value);
+        bool rpop(const std::string &key, std::string& value);
+        int lrem(const std::string& key, int count, const std::string& value);
+        bool lindex(const std::string& key, int index, std::string& value);
+        bool lset(const std::string& key, int count, const std::string& value);
+
+
+
+
         //persistence: Dump / load the db from a file
         bool dump(const std::string& filename);
         bool load(const std::string& filename);

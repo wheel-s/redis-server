@@ -109,9 +109,6 @@ bool Database::rename(const std::string &oldkey, const std::string &newkey){
         found = true;
     }
 
-
-
-
     return found;
 }
 
