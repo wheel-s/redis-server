@@ -1,6 +1,6 @@
 # Redis Server
 
--A light Redis-Compatable in-Memory data store written in C++ (on windows 🥲). it supports strings, list , and hashes, full
+-A light Redis-Compatable in-Memory data store written in C++. It supports strings, list , and hashes, full
  Redis Serialization Protocol, multi-client concurrency, and periodic disk persistense.   
 
 
@@ -22,7 +22,7 @@ Data is automatically dumped to dump.my_rdb every 300 seconds and on shutdowns; 
 #from the root
 make
 ```
-or compile manually
+- or compile manually
 ```
 #windows
 g++ -std=c++17 -pthread -Iinclude src/*.cpp -o redisServer -lws2_32

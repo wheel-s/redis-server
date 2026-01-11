@@ -2,7 +2,8 @@
 
 #include <fstream>
 #include <sstream>
-
+#include <algorithm>
+#include <iterator>
 
 Database& Database::getInstance(){
     static Database instance;
@@ -112,6 +113,131 @@ bool Database::rename(const std::string &oldkey, const std::string &newkey){
     return found;
 }
 
+
+//List Operations
+
+
+size_t Database::llen(const std::string&key){
+
+    std::lock_guard<std::mutex> lock(db_mutex);
+    auto it = list_store.find(key);
+    if(it != list_store.end()){
+        return it->second.size();
+    }
+
+    return 0;
+
+}
+void Database::lpush(const std::string &key, const std::string& value){
+    std::lock_guard<std::mutex> lock(db_mutex);
+    list_store[key].insert(list_store[key].begin(), value);
+
+}
+void Database::rpush(const std::string &key, const std::string& value){
+    std::lock_guard<std::mutex> lock(db_mutex);
+    list_store[key].push_back(value);
+}
+bool Database::lpop(const std::string &key, std::string& value){
+    std::lock_guard<std::mutex> lock(db_mutex);
+    auto it = list_store.find(key);
+    if(it != list_store.end() && !it->second.empty()){
+        value  = it->second.front();
+        it->second.erase(it->second.begin());
+        return true;
+    }
+    return false;
+}
+bool Database::rpop(const std::string &key, std::string& value){
+    std::lock_guard<std::mutex> lock(db_mutex);
+    auto it = list_store.find(key);
+    if(it != list_store.end() && !it->second.empty()){
+        value  = it->second.back();
+        it->second.pop_back();
+        return true;
+    }
+    return false;
+
+}
+int Database::lrem(const std::string& key, int count, const std::string& value){
+    std::lock_guard<std::mutex> lock(db_mutex);
+    int removed = 0;
+    auto it = list_store.find(key);
+    if(it == list_store.end()){ return 0; }
+
+    auto& lst = it->second;
+
+    if(count == 0){
+        //remove all
+        auto new_end = std::remove(lst.begin(),lst.end(), value );
+        removed = std::distance(new_end, lst.end());
+        lst.erase(new_end, lst.end());
+    }
+    else if (count > 0){
+        //remove from head to tail
+        for(auto iter =lst.begin(); iter != lst.end() && removed < count;){
+            if(*iter == value){
+                iter = lst.erase(iter);
+                ++removed;
+            }else{
+                ++iter;
+            }
+        }
+    }else{
+
+        for( auto riter = lst.rbegin(); riter != lst.rend() && removed < (-count);){
+           if(*riter == value){
+                auto fwditer =  riter.base();
+                --fwditer;
+                fwditer = lst.erase(fwditer);
+                ++removed;
+                riter = std::reverse_iterator<std::vector<std::string>::iterator>(fwditer);
+           }else{
+            ++riter;
+           }
+
+        }
+
+    }
+
+    return removed;
+
+}
+bool Database::lindex(const std::string& key, int index, std::string& value){
+    std::lock_guard<std::mutex> lock(db_mutex);
+    auto it = list_store.find(key);
+    if(it == list_store.end()){
+        return false;
+    }
+
+    const auto &lst = it->second;
+    if(index < 0){
+        index = lst.size() + index;
+    }
+    if(index < 0 || static_cast<size_t>(index) >= lst.size()){
+        return false;
+    }
+
+    value = lst[index];
+    return true;
+}
+bool Database::lset(const std::string& key, int index, const std::string& value){
+    std::lock_guard<std::mutex> lock(db_mutex);
+    auto it = list_store.find(key);
+    if(it == list_store.end()){
+        return false;
+    }
+
+    auto &lst = it->second;
+    if(index < 0){
+        index = lst.size() + index;
+    }
+    if(index < 0 || static_cast<size_t>(index) >= lst.size()){
+        return false;
+    }
+    
+    lst[index] = value;
+    return true;
+}
 
 
 

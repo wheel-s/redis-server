@@ -33,7 +33,7 @@ class Database {
         bool rpop(const std::string &key, std::string& value);
         int lrem(const std::string& key, int count, const std::string& value);
         bool lindex(const std::string& key, int index, std::string& value);
-        bool lset(const std::string& key, int count, const std::string& value);
+        bool lset(const std::string& key, int index, const std::string& value);
 
 
 
